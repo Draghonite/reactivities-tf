@@ -65,11 +65,7 @@ pipeline {
                         """
                     }
                 }
-                // TODO: decline while testing
-                input message="done?"
-                // dir('./artifacts') {
-                    stash(name: 'sourceartifacts')
-                // }
+                stash(name: 'sourceartifacts')
             }
         }
         stage('Sonar Scanner') {
@@ -122,6 +118,7 @@ pipeline {
                     PACKAGE_REPO_PATH: "${PACKAGE_REPO_PATH}"
                 ])
                 cleanDirectory([ DIRECTORY: "${BUILDS_PATH}" ])
+                cleanDirectory([ DIRECTORY: "./artifacts" ])
             }
         }
     }
