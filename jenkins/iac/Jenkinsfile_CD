@@ -108,6 +108,15 @@ pipeline {
                 //     //     AWS_BUNDLE_ID = "medium_2_0"
                 //     //     break;
                 // }
+
+                // #TF_VAR_region=${params.AWS_REGION} \
+                //             TF_VAR_export deploy_env=${params.BUILD_ENV} \
+                //             #TF_VAR_export availability_zone=${params.AWS_AVAILABILITY_ZONE} \
+                //             TF_VAR_export bundle_id=${params.AWS_BUNDLE_ID} \
+                //             TF_VAR_export app_name=${params.APPLICATION_NAME} \
+                //                 terraform init -no-color -input=false -compact-warnings && \
+                //                 terraform plan -no-color -input=false -compact-warnings -out=plan.file
+
                 tfDeploy([
                     PACKAGE_NAME: "${PACKAGE_NAME}",
                     BUILD_ENV: "${BUILD_ENV}",

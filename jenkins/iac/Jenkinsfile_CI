@@ -60,8 +60,6 @@ pipeline {
                     withCredentials([string(credentialsId: "AWS_SECRET_ACCESS_KEY_${params.BUILD_ENV}", variable: 'AWS_SECRET_ACCESS_KEY')]) {
                         sh """
                             TF_VAR_deploy_env=${params.BUILD_ENV} \
-                            TF_VAR_bundle_id=${params.AWS_BUNDLE_ID} \
-                            TF_VAR_app_name=${params.APPLICATION_NAME} \
                                 terraform init -no-color -input=false -compact-warnings && \
                                 terraform plan -no-color -input=false -compact-warnings -out=plan.file
                         """
@@ -115,7 +113,7 @@ pipeline {
                 }
                 sh '''
                     mkdir -p $BUILDS_PATH
-                    cd ./artifacts && tar -czvf $PACKAGE_BUILD_PATH .
+                    cd ./artifacts && tar -czvf $PACKAGE_BUILD_PATH --exclude='.gen' --exclude='.scannerwork' .
                 '''
                 archiveArtifact([
                     ARTIFACTORY_CREDS_ID: "${ARTIFACTORY_CREDS_ID}",
