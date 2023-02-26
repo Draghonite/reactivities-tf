@@ -91,6 +91,19 @@ pipeline {
                 ])
             }
         }
+        stage('Load State') {
+            when {
+                expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' }
+            }
+            agent {
+                docker {
+                    image 'amazon/aws-cli'
+                }
+            }
+            steps {
+                input type="use aws cli to GET tf state file, stash to 'tfstate'; done?"
+            }
+        }
         stage('Deploy') {
             when {
                 expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' && RUN_TYPE == 'Create' }
@@ -148,6 +161,7 @@ pipeline {
                             echo Deployed the ${params.BUILD_ENV} build to ${params.DEPLOY_ENV}.
 
                         """
+                        // TODO: stash state to 'tfstate'
                     }
                 }
             }
@@ -173,6 +187,7 @@ pipeline {
                     DEPLOY_ENV: "${DEPLOY_ENV}",
                     AWS_REGION: "${AWS_REGION}"
                 ])
+                // TODO: stash state to 'tfstate'
             }
         }
         stage('Save State') {
@@ -185,7 +200,7 @@ pipeline {
                 }
             }
             steps {
-                input type="use aws cli to post file; done?"
+                input type="use aws cli to POST tf state file, unstash from 'tfstate'; done?"
             }
         }
     }
