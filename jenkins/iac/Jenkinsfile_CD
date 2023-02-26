@@ -63,7 +63,7 @@ pipeline {
         APPLICATION_NAME = 'Reactivities'
         PACKAGE_NAME = "reactivities-tf-${BUILD_ENV}-${CI_BUILD_NUMBER}.tar.gz"
         PACKAGE_REPO_PATH = "reactivities/tf/${BUILD_ENV}/${PACKAGE_NAME}"
-        TF_STATE_S3_BUCKET_URL = 's3://terraform-state-sidemotion/reactivities-tf/terraform.tfstate'
+        TF_STATE_S3_BUCKET_URL = "s3://terraform-state-sidemotion/${DEPLOY_ENV}/reactivities-tf/${AWS_REGION}/terraform.tfstate"
     }
     stages {
         stage('Download Artifact') {
@@ -141,7 +141,7 @@ pipeline {
 
                             echo Loading Terraform state remotely if exists
                             # TODO: see how to check and/or silently fail -- 2> /dev/null is not enough
-                            AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} AWS_DEFAULT_REGION=${AWS_REGION} aws s3 cp ${TF_STATE_S3_BUCKET_URL} terraform.tfstate
+                            #AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} AWS_DEFAULT_REGION=${AWS_REGION} aws s3 cp ${TF_STATE_S3_BUCKET_URL} terraform.tfstate
                             
                             TF_VAR_region=${AWS_REGION} \
                             TF_VAR_deploy_env=${DEPLOY_ENV} \
