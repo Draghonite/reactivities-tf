@@ -1,0 +1,134 @@
+@Library("jenkins-library") _
+
+pipeline {
+    agent any
+    // *** Documentation ***
+    // name: reactivities-iac-ci
+    // descrition: 'Continuous Integration (Build) for the Infrastructure-as-Code part of the Reactivities client application.'
+    // discardOldBuilds: strategy: Log Rotation, maxBuildsToKeep: 10
+    // doNotAllowConcurrentBuilds: true
+    // server env vars: ARTIFACTORY_CREDS_ID, ARTIFACTORY_SERVER
+    parameters {
+        choice(
+            name: 'BUILD_ENV',
+            choices: ['dev','qa'],
+            description: 'Environment for which to build and package the solution.',
+        )
+        choice(
+            name: 'RUN_SYNTH',
+            choices: ['Yes','No'],
+            description: 'Whether to synthesize.',
+        )
+        choice(
+            name: 'RUN_SONAR',
+            choices: ['No','Yes'],
+            description: 'Whether to run SonarQube Scanner and Quality Gate stages.',
+        )
+        choice(
+            name: 'RUN_PACKAGE_ARCHIVE',
+            choices: ['Yes','No'],
+            description: 'Whether to package the artifact(s).',
+        )
+    }
+    environment {
+        CI = 'false' // TODO: set to true, false for now -- else builds fail due to client build warnings
+        SONAR_PROJECT_KEY = 'Reactivities-CDKTF'
+        SONAR_PROJECT_BASE_PATH = '.'
+        SONAR_SERVER_ID = 'SonarQubeScanner'
+        BUILDS_PATH = '/builds'
+        BUILD_PREFIX = '1.0'
+        PACKAGE_NAME = "reactivities-cdktf-${BUILD_ENV}-${BUILD_PREFIX}.${BUILD_NUMBER}.tar.gz"
+        PACKAGE_REPO_PATH = "reactivities/cdktf/${BUILD_ENV}/${PACKAGE_NAME}"
+        PACKAGE_BUILD_PATH = "${BUILDS_PATH}/${PACKAGE_NAME}"
+    }
+    stages {
+        stage('Synthesize') {
+            when {
+                expression { RUN_SYNTH == "Yes" }
+            }
+            agent {
+                docker {
+                    image 'node:16-alpine'
+                }
+            }
+            steps {
+                sh '''
+                    apk update && apk add terraform
+                    npm install -y -g cdktf-cli
+                    npm install -y -g typescript
+                    npm install
+                    cdktf get
+                    cdktf synth
+                '''
+                withCredentials([string(credentialsId: "AWS_ACCESS_KEY_ID_${params.BUILD_ENV}", variable: 'AWS_ACCESS_KEY_ID')]) {
+                    withCredentials([string(credentialsId: "AWS_SECRET_ACCESS_KEY_${params.BUILD_ENV}", variable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh """
+                            cd cdktf.out/stacks/reactivities-cdktf
+                            AWS_REGION=${params.AWS_REGION} DEPLOY_ENV=${params.BUILD_ENV} \
+                                terraform init -no-color -input=false -compact-warnings && \
+                                terraform plan -no-color -input=false -compact-warnings -out=plan.file
+                        """
+                    }
+                }
+                dir('cdktf.out/stacks/reactivities-cdktf') {
+                    stash(name: 'sourceartifacts')
+                }
+            }
+        }
+        stage('Sonar Scanner') {
+            when {
+                expression { RUN_SONAR == 'Yes' }
+            }
+            agent {
+                docker {
+                    image 'sonarsource/sonar-scanner-cli'
+                }
+            }
+            steps {
+                sh '''
+                    rm -rf node_modules
+                '''
+                sonarScan([
+                    SONAR_SERVER_ID: "${SONAR_SERVER_ID}",
+                    SONAR_PROJECT_BASE_PATH: "${SONAR_PROJECT_BASE_PATH}",
+                    SONAR_PROJECT_KEY: "${SONAR_PROJECT_KEY}"
+                ])
+            }
+        }
+        stage("Quality Gate") {
+            when {
+                expression { RUN_SONAR == 'Yes' }
+            }
+            steps {
+                awaitQualityGate()
+            }
+        }
+        stage('Package') {
+            when {
+                expression { RUN_SYNTH == "Yes" && RUN_PACKAGE_ARCHIVE == "Yes" }
+            }
+            agent {
+                docker {
+                    image 'node:16-alpine'
+                }
+            }
+            steps {
+                sh "rm -rf ./artifacts && mkdir ./artifacts"
+                dir('./artifacts') {
+                    unstash 'sourceartifacts'
+                }
+                sh '''
+                    mkdir -p $BUILDS_PATH
+                    cd ./artifacts && tar -czvf $PACKAGE_BUILD_PATH .
+                '''
+                archiveArtifact([
+                    ARTIFACTORY_CREDS_ID: "${ARTIFACTORY_CREDS_ID}",
+                    ARTIFACTORY_SERVER: "${ARTIFACTORY_SERVER}",
+                    PACKAGE_BUILD_PATH: "${PACKAGE_BUILD_PATH}",
+                    PACKAGE_REPO_PATH: "${PACKAGE_REPO_PATH}"
+                ])
+                cleanDirectory([ DIRECTORY: "${BUILDS_PATH}" ])
+            }
+        }
+    }
+}

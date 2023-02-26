@@ -1,0 +1,122 @@
+import jenkins.model.Jenkins
+@Library("jenkins-library") _
+
+pipeline {
+    agent {
+        docker {
+            image 'node:16-alpine'
+        }
+    }
+    // *** Documentation ***
+    // name: reactivities-client-app-cd
+    // descrition: 'Continuous Delivery for the Infrastructure-as-Code part of the Reactivities client application.'
+    // discardOldBuilds: strategy: Log Rotation, maxBuildsToKeep: 10
+    // doNotAllowConcurrentBuilds: true
+    // server env vars: ARTIFACTORY_CREDS_ID, ARTIFACTORY_SERVER
+    // credentials: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+    options {
+        buildDiscarder(logRotator(numToKeepStr:'5'))
+    }
+    parameters {
+        choice(
+            name: 'DEPLOY_ENV',
+            choices: ['dev','qa','prod'],
+            description: 'Environment for which to deploy.',
+        )
+        choice(
+            name: 'RUN_PACKAGE_DOWNLOAD',
+            choices: ['Yes','No'],
+            description: 'Whether to download the artifact(s).',
+        )
+        choice(
+            name: 'RUN_PACKAGE_VERIFY',
+            choices: ['Yes','No'],
+            description: 'Whether to verify integrity of the artifact(s).',
+        )
+        choice(
+            name: 'RUN_DEPLOYMENT',
+            choices: ['Yes','No'],
+            description: 'Whether to perform the deployment.',
+        )
+        choice(
+            name: 'AWS_REGION',
+            choices: ['us-east-1', 'us-east-2', 'us-west-2'],
+            description: 'AWS Region for deployment of cloud resources.'
+        )
+        choice(
+            name: 'RUN_TYPE',
+            choices: ['Create', 'Destroy'],
+            description: 'Whether to create or destroy resources.'
+        )
+        string(
+            name: 'CI_BUILD_NUMBER',
+            description: 'Version of the package to deploy.  Same as the version prefix + CI build number (e.g. "1.0.XXX").'
+        )
+        choice(
+            name: 'DRY_RUN',
+            choices: ['No','Yes'],
+            description: 'Whether to perform all enabled operations except for provisioning/destruction of resources (if Yes).',
+        )
+    }
+    environment {
+        // ensure if 'prod' is the intended deployment environment, use the 'qa' build
+        BUILD_ENV = "${ DEPLOY_ENV ==  'prod' ? 'qa' : DEPLOY_ENV }"
+        PACKAGE_NAME = "reactivities-cdktf-${BUILD_ENV}-${CI_BUILD_NUMBER}.tar.gz"
+        PACKAGE_REPO_PATH = "reactivities/cdktf/${BUILD_ENV}/${PACKAGE_NAME}"
+    }
+    stages {
+        stage('Download Artifact') {
+            when {
+                expression { RUN_PACKAGE_DOWNLOAD == 'Yes' && CI_BUILD_NUMBER != '' }
+            }
+            steps {
+                sh "echo LAST SUCCESSFUL CI BUILD: ${Jenkins.getInstance().getItemByFullName('reactivities-iac-cd').lastSuccessfulBuild.number}"
+                downloadArtifact([
+                    ARTIFACTORY_CREDS_ID: "${ARTIFACTORY_CREDS_ID}",
+                    ARTIFACTORY_SERVER: "${ARTIFACTORY_SERVER}",
+                    PACKAGE_REPO_PATH: "${PACKAGE_REPO_PATH}",
+                    PACKAGE_NAME: "${PACKAGE_NAME}"
+                ])
+            }
+        }
+        stage('Verify Artifact') {
+            when {
+                expression { RUN_PACKAGE_DOWNLOAD == 'Yes' && CI_BUILD_NUMBER != '' && RUN_PACKAGE_VERIFY == 'Yes'}
+            }
+            steps {
+                verifyArtifact([
+                    ARTIFACTORY_CREDS_ID: "${ARTIFACTORY_CREDS_ID}",
+                    ARTIFACTORY_SERVER: "${ARTIFACTORY_SERVER}",
+                    PACKAGE_REPO_PATH: "${PACKAGE_REPO_PATH}",
+                    PACKAGE_NAME: "${PACKAGE_NAME}"
+                ])
+            }
+        }
+        stage('Deploy') {
+            when {
+                expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' && RUN_TYPE == 'Create' }
+            }
+            steps {
+                tfDeploy([
+                    PACKAGE_NAME: "${PACKAGE_NAME}",
+                    BUILD_ENV: "${BUILD_ENV}",
+                    DEPLOY_ENV: "${DEPLOY_ENV}",
+                    AWS_REGION: "${AWS_REGION}"
+                ])
+            }
+        }
+        stage('Destroy') {
+            when {
+                expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' && RUN_TYPE == 'Destroy' }
+            }
+            steps {
+                tfDestroy([
+                    PACKAGE_NAME: "${PACKAGE_NAME}",
+                    BUILD_ENV: "${BUILD_ENV}",
+                    DEPLOY_ENV: "${DEPLOY_ENV}",
+                    AWS_REGION: "${AWS_REGION}"
+                ])
+            }
+        }
+    }
+}
