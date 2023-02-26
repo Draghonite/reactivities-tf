@@ -96,16 +96,16 @@ pipeline {
                 expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' && RUN_TYPE == 'Create' }
             }
             steps {
-                def AWS_AVAILABILITY_ZONE = "${params.AWS_REGION}a";
-                def AWS_BUNDLE_ID = "nano_2_0";
-                switch (params.DEPLOY_ENV) {
-                    case "qa":
-                        AWS_BUNDLE_ID = "small_2_0"
-                        break;
-                    // case "prod":
-                    //     AWS_BUNDLE_ID = "medium_2_0"
-                    //     break;
-                }
+                // def AWS_AVAILABILITY_ZONE = "${params.AWS_REGION}a";
+                // def AWS_BUNDLE_ID = "nano_2_0";
+                // switch (params.DEPLOY_ENV) {
+                //     case "qa":
+                //         AWS_BUNDLE_ID = "small_2_0"
+                //         break;
+                //     // case "prod":
+                //     //     AWS_BUNDLE_ID = "medium_2_0"
+                //     //     break;
+                // }
 
                 // #TF_VAR_region=${params.AWS_REGION} \
                 //             TF_VAR_export deploy_env=${params.BUILD_ENV} \
@@ -138,11 +138,11 @@ pipeline {
                             terraform init -no-color -input=false -compact-warnings
 
                             #TODO: get and reuse state from s3 bucket
+                            #TF_VAR_export availability_zone=${AWS_AVAILABILITY_ZONE} \
+                            #TF_VAR_export bundle_id=${AWS_BUNDLE_ID} \
                             
                             TF_VAR_region=${params.AWS_REGION} \
                             TF_VAR_export deploy_env=${params.DEPLOY_ENV} \
-                            TF_VAR_export availability_zone=${AWS_AVAILABILITY_ZONE} \
-                            TF_VAR_export bundle_id=${AWS_BUNDLE_ID} \
                             TF_VAR_export app_name=${params.APPLICATION_NAME} \
                             terraform apply -input=false -auto-approve -compact-warnings plan.file
 
