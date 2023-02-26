@@ -63,6 +63,7 @@ pipeline {
         APPLICATION_NAME = 'Reactivities'
         PACKAGE_NAME = "reactivities-tf-${BUILD_ENV}-${CI_BUILD_NUMBER}.tar.gz"
         PACKAGE_REPO_PATH = "reactivities/tf/${BUILD_ENV}/${PACKAGE_NAME}"
+        TF_STATE_S3_BUCKET_URL = 's3://terraform-state-sidemotion/reactivities-tf/terraform.tfstate'
     }
     stages {
         stage('Download Artifact') {
@@ -91,20 +92,6 @@ pipeline {
                 ])
             }
         }
-        // stage('Load State') {
-        //     when {
-        //         expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' }
-        //     }
-        //     agent {
-        //         docker {
-        //             image 'amazon/aws-cli'
-        //         }
-        //     }
-        //     steps {
-        //         sh "echo [LOAD STATE]"
-        //         input message:"use aws cli to GET tf state file, stash to 'tfstate'; done?"
-        //     }
-        // }
         stage('Deploy') {
             when {
                 expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' && RUN_TYPE == 'Create' }
@@ -161,9 +148,10 @@ pipeline {
 
                             echo Deployed the ${params.BUILD_ENV} build to ${params.DEPLOY_ENV}.
 
+                            echo Saving Terraform state remotely
+                            apk add aws-cli
+                            AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} AWS_DEFAULT_REGION=${AWS_REGION} aws s3 cp terraform.tfstate ${TF_STATE_S3_BUCKET_URL}
                         """
-                        input message:"use aws cli to GET tf state file, stash to 'tfstate'; done?"
-                        // TODO: stash state to 'tfstate'
                     }
                 }
             }
@@ -190,25 +178,12 @@ pipeline {
                     AWS_REGION: "${AWS_REGION}"
                 ])
                 // TODO: stash state to 'tfstate'
+                // sh """
+                //     echo Saving Terraform state remotely
+                //     apk add aws-cli
+                //     AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} AWS_DEFAULT_REGION=${AWS_REGION} aws s3 cp terraform.tfstate ${TF_STATE_S3_BUCKET_URL}
+                // """
             }
         }
-        // stage('Save State') {
-        //     when {
-        //         expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' }
-        //     }
-        //     agent {
-        //         docker {
-        //             image 'amazon/aws-cli'
-        //         }
-        //     }
-        //     steps {
-        //         input message:"use aws cli to POST tf state file, unstash from 'tfstate'; done?"
-        //     }
-        // }
     }
 }
-// post {
-//     always {
-//         deleteDir()
-//     }
-// }
