@@ -101,8 +101,8 @@ pipeline {
                     PACKAGE_NAME: "${PACKAGE_NAME}",
                     BUILD_ENV: "${BUILD_ENV}",
                     DEPLOY_ENV: "${DEPLOY_ENV}",
-                    AWS_REGION: "${AWS_REGION}"
-                    APPLICATION_NAME: "${APPLICATION_NAME}"
+                    AWS_REGION: "${AWS_REGION}",
+                    APPLICATION_NAME: "${APPLICATION_NAME}",
                     TF_STATE_S3_BUCKET_URL: "${TF_STATE_S3_BUCKET_URL}"
                 ])
             }
