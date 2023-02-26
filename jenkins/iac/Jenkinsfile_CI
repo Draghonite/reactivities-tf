@@ -123,3 +123,8 @@ pipeline {
         }
     }
 }
+post {
+    always {
+        deleteDir()
+    }
+}

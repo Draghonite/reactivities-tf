@@ -134,7 +134,7 @@ pipeline {
                         }
                         sh """
                             cd ./artifacts && mkdir ./release && cd ./release
-                            tar -xzvf ../${params.PACKAGE_NAME} .
+                            tar -xzvf ../${PACKAGE_NAME} .
                             terraform init -no-color -input=false -compact-warnings
 
                             #TODO: get and reuse state from s3 bucket
@@ -173,5 +173,10 @@ pipeline {
                 ])
             }
         }
+    }
+}
+post {
+    always {
+        deleteDir()
     }
 }
