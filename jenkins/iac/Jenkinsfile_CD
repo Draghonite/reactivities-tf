@@ -159,7 +159,7 @@ pipeline {
                 }
                 tfSaveState([
                     AWS_REGION: "${AWS_REGION}",
-                    TF_PROJECT_PATH: "./artifacts/release"
+                    TF_PROJECT_PATH: "./artifacts/release",
                     TF_STATE_S3_BUCKET_URL: "${TF_STATE_S3_BUCKET_URL}"
                 ])
             }
