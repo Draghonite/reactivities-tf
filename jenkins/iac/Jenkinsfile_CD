@@ -125,8 +125,8 @@ pipeline {
                 // ])
 
                 // TODO: move to tfDeploy, and leverage tfSaveState
-                withCredentials([string(credentialsId: "AWS_ACCESS_KEY_ID_${params.DEPLOY_ENV}", variable: 'AWS_ACCESS_KEY_ID')]) {
-                    withCredentials([string(credentialsId: "AWS_SECRET_ACCESS_KEY_${params.DEPLOY_ENV}", variable: 'AWS_SECRET_ACCESS_KEY')]) {
+                withCredentials([string(credentialsId: "AWS_ACCESS_KEY_ID_${DEPLOY_ENV}", variable: 'AWS_ACCESS_KEY_ID')]) {
+                    withCredentials([string(credentialsId: "AWS_SECRET_ACCESS_KEY_${DEPLOY_ENV}", variable: 'AWS_SECRET_ACCESS_KEY')]) {
                         sh '''
                             apk update && apk add terraform aws-cli
                             rm -rf ./artifacts && mkdir ./artifacts
@@ -141,15 +141,14 @@ pipeline {
 
                             echo Loading Terraform state remotely if exists
                             # TODO: see how to check and/or silently fail -- 2> /dev/null is not enough
-                            # TODO: see about the 'stale plan' error
                             AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} AWS_DEFAULT_REGION=${AWS_REGION} aws s3 cp ${TF_STATE_S3_BUCKET_URL} terraform.tfstate
                             
-                            TF_VAR_region=${params.AWS_REGION} \
-                            TF_VAR_deploy_env=${params.DEPLOY_ENV} \
-                            TF_VAR_app_name=${params.APPLICATION_NAME} \
+                            TF_VAR_region=${AWS_REGION} \
+                            TF_VAR_deploy_env=${DEPLOY_ENV} \
+                            TF_VAR_app_name=${APPLICATION_NAME} \
                             terraform apply -input=false -auto-approve -compact-warnings
 
-                            echo Deployed the ${params.BUILD_ENV} build to ${params.DEPLOY_ENV}.
+                            echo Deployed the ${BUILD_ENV} build to ${DEPLOY_ENV}.
 
                             echo Saving Terraform state remotely
                             AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} AWS_DEFAULT_REGION=${AWS_REGION} aws s3 cp terraform.tfstate ${TF_STATE_S3_BUCKET_URL}
