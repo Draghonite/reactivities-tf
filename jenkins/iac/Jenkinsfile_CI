@@ -15,9 +15,9 @@ pipeline {
             description: 'Environment for which to build and package the solution.',
         )
         choice(
-            name: 'RUN_SYNTH',
+            name: 'RUN_INITIALIZE',
             choices: ['Yes','No'],
-            description: 'Whether to synthesize.',
+            description: 'Whether to initialize and plan.',
         )
         choice(
             name: 'RUN_SONAR',
@@ -32,19 +32,20 @@ pipeline {
     }
     environment {
         CI = 'false' // TODO: set to true, false for now -- else builds fail due to client build warnings
-        SONAR_PROJECT_KEY = 'Reactivities-CDKTF'
+        SONAR_PROJECT_KEY = 'Reactivities-TF'
         SONAR_PROJECT_BASE_PATH = '.'
         SONAR_SERVER_ID = 'SonarQubeScanner'
         BUILDS_PATH = '/builds'
         BUILD_PREFIX = '1.0'
-        PACKAGE_NAME = "reactivities-cdktf-${BUILD_ENV}-${BUILD_PREFIX}.${BUILD_NUMBER}.tar.gz"
-        PACKAGE_REPO_PATH = "reactivities/cdktf/${BUILD_ENV}/${PACKAGE_NAME}"
+        APPLICATION_NAME = 'Reactivities'
+        PACKAGE_NAME = "reactivities-tf-${BUILD_ENV}-${BUILD_PREFIX}.${BUILD_NUMBER}.tar.gz"
+        PACKAGE_REPO_PATH = "reactivities/tf/${BUILD_ENV}/${PACKAGE_NAME}"
         PACKAGE_BUILD_PATH = "${BUILDS_PATH}/${PACKAGE_NAME}"
     }
     stages {
         stage('Synthesize') {
             when {
-                expression { RUN_SYNTH == "Yes" }
+                expression { RUN_INITIALIZE == "Yes" }
             }
             agent {
                 docker {
@@ -54,23 +55,24 @@ pipeline {
             steps {
                 sh '''
                     apk update && apk add terraform
-                    npm install -y -g cdktf-cli
-                    npm install -y -g typescript
-                    npm install
-                    cdktf get
-                    cdktf synth
                 '''
                 withCredentials([string(credentialsId: "AWS_ACCESS_KEY_ID_${params.BUILD_ENV}", variable: 'AWS_ACCESS_KEY_ID')]) {
                     withCredentials([string(credentialsId: "AWS_SECRET_ACCESS_KEY_${params.BUILD_ENV}", variable: 'AWS_SECRET_ACCESS_KEY')]) {
                         sh """
-                            cd cdktf.out/stacks/reactivities-cdktf
-                            AWS_REGION=${params.AWS_REGION} DEPLOY_ENV=${params.BUILD_ENV} \
+                            rm -rf ./artifacts && mkdir ./artifacts && cd ./artifacts
+                            TF_VAR_region=${params.AWS_REGION} \
+                            TF_VAR_export deploy_env=${params.BUILD_ENV} \
+                            TF_VAR_export availability_zone=${params.AWS_AVAILABILITY_ZONE} \
+                            TF_VAR_export bundle_id=${params.AWS_BUNDLE_ID} \
+                            TF_VAR_export app_name=${params.APPLICATION_NAME} \
                                 terraform init -no-color -input=false -compact-warnings && \
                                 terraform plan -no-color -input=false -compact-warnings -out=plan.file
                         """
                     }
                 }
-                dir('cdktf.out/stacks/reactivities-cdktf') {
+                // TODO: decline while testing
+                input message="done?"
+                dir('./artifacts') {
                     stash(name: 'sourceartifacts')
                 }
             }
@@ -85,9 +87,6 @@ pipeline {
                 }
             }
             steps {
-                sh '''
-                    rm -rf node_modules
-                '''
                 sonarScan([
                     SONAR_SERVER_ID: "${SONAR_SERVER_ID}",
                     SONAR_PROJECT_BASE_PATH: "${SONAR_PROJECT_BASE_PATH}",
@@ -105,7 +104,7 @@ pipeline {
         }
         stage('Package') {
             when {
-                expression { RUN_SYNTH == "Yes" && RUN_PACKAGE_ARCHIVE == "Yes" }
+                expression { RUN_INITIALIZE == "Yes" && RUN_PACKAGE_ARCHIVE == "Yes" }
             }
             agent {
                 docker {

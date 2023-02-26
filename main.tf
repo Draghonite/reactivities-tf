@@ -1,20 +1,43 @@
 provider "aws" {
-  region = "us-east-1"
+  region = var.region
 }
 
-resource "aws_lightsail_instance" "server1" {
-    # TODO: parameterize REGION, ENV, AVAILABILITY_ZONE, BUNDLE_ID, 
-    count = 1
-    name = "Reactivities_dev_us-east-1-${count.index+1}"
-    availability_zone = "us-east-1a"
-    blueprint_id = "ubuntu_20_04"
-    bundle_id = "nano_2_0"
-    # user_data = "TODO: read in w/ new-line from <root>/assets/user_data.sh"
-    tags = {
-      "ApplicationId" = "Reactivities"
-    }
+variable "region" {
+  type = string
+  default = "us-east-1"
 }
 
-output "server1_public_ip" {
-  value = ["${aws_lightsail_instance.*.public_ip_address}"]
+variable "deploy_env" {
+  type = string
+  default = "dev"
+}
+
+variable "availability_zone" {
+  type = string
+  default = "us-east-1a"
+}
+
+variable "bundle_id" {
+  type = string
+  default = "nano_2_0"
+}
+
+variable "app_name" {
+  type = string
+  default = "Reactivities"
+}
+
+resource "aws_lightsail_instance" "app_server" {
+  name = "${var.app_name}_${var.deploy_env}_${var.region}"
+  availability_zone = var.availability_zone
+  blueprint_id = "ubuntu_20_04"
+  bundle_id = var.bundle_id
+  user_data = "${file("assets/user_data.sh")}"
+  tags = {
+    "ApplicationId" = var.app_name
+  }
+}
+
+output "app_server_public_ips" {
+  value = aws_lightsail_instance.app_server.public_ip_address
 }

@@ -61,6 +61,7 @@ pipeline {
     environment {
         // ensure if 'prod' is the intended deployment environment, use the 'qa' build
         BUILD_ENV = "${ DEPLOY_ENV ==  'prod' ? 'qa' : DEPLOY_ENV }"
+        APPLICATION_NAME = 'Reactivities'
         PACKAGE_NAME = "reactivities-cdktf-${BUILD_ENV}-${CI_BUILD_NUMBER}.tar.gz"
         PACKAGE_REPO_PATH = "reactivities/cdktf/${BUILD_ENV}/${PACKAGE_NAME}"
     }
@@ -102,6 +103,7 @@ pipeline {
                     BUILD_ENV: "${BUILD_ENV}",
                     DEPLOY_ENV: "${DEPLOY_ENV}",
                     AWS_REGION: "${AWS_REGION}"
+                    APPLICATION_NAME: "${APPLICATION_NAME}"
                 ])
             }
         }
