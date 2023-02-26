@@ -102,7 +102,7 @@ pipeline {
         //     }
         //     steps {
         //         sh "echo [LOAD STATE]"
-        //         input message="use aws cli to GET tf state file, stash to 'tfstate'; done?"
+        //         input message:"use aws cli to GET tf state file, stash to 'tfstate'; done?"
         //     }
         // }
         stage('Deploy') {
@@ -162,7 +162,7 @@ pipeline {
                             echo Deployed the ${params.BUILD_ENV} build to ${params.DEPLOY_ENV}.
 
                         """
-                        input message="use aws cli to GET tf state file, stash to 'tfstate'; done?"
+                        input message:"use aws cli to GET tf state file, stash to 'tfstate'; done?"
                         // TODO: stash state to 'tfstate'
                     }
                 }
@@ -202,7 +202,7 @@ pipeline {
         //         }
         //     }
         //     steps {
-        //         input message="use aws cli to POST tf state file, unstash from 'tfstate'; done?"
+        //         input message:"use aws cli to POST tf state file, unstash from 'tfstate'; done?"
         //     }
         // }
     }
