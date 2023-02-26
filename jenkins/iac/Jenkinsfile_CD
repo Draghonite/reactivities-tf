@@ -3,7 +3,7 @@
 pipeline {
     agent {
         docker {
-            image 'amazon/aws-cli'
+            image 'node:16-alpine'
         }
     }
     // *** Documentation ***
