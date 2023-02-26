@@ -98,6 +98,16 @@ pipeline {
                 expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' && RUN_TYPE == 'Create' }
             }
             steps {
+                // def AWS_AVAILABILITY_ZONE = "${params.AWS_REGION}a";
+                // def AWS_BUNDLE_ID = "nano_2_0";
+                // switch (params.DEPLOY_ENV) {
+                //     case "qa":
+                //         AWS_BUNDLE_ID = "small_2_0"
+                //         break;
+                //     // case "prod":
+                //     //     AWS_BUNDLE_ID = "medium_2_0"
+                //     //     break;
+                // }
                 tfDeploy([
                     PACKAGE_NAME: "${PACKAGE_NAME}",
                     BUILD_ENV: "${BUILD_ENV}",
@@ -112,6 +122,16 @@ pipeline {
                 expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' && RUN_TYPE == 'Destroy' }
             }
             steps {
+                // def AWS_AVAILABILITY_ZONE = "${params.AWS_REGION}a";
+                // def AWS_BUNDLE_ID = "nano_2_0";
+                // switch (params.DEPLOY_ENV) {
+                //     case "qa":
+                //         AWS_BUNDLE_ID = "small_2_0"
+                //         break;
+                //     // case "prod":
+                //     //     AWS_BUNDLE_ID = "medium_2_0"
+                //     //     break;
+                // }
                 tfDestroy([
                     PACKAGE_NAME: "${PACKAGE_NAME}",
                     BUILD_ENV: "${BUILD_ENV}",
