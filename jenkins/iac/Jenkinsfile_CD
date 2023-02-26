@@ -124,6 +124,11 @@ pipeline {
                 //     APPLICATION_NAME: "${APPLICATION_NAME}"
                 // ])
 
+                tfGetState([
+                    AWS_REGION: "${AWS_REGION}",
+                    TF_PROJECT_PATH: "./artifacts/release"
+                    TF_STATE_S3_BUCKET_URL: "${TF_STATE_S3_BUCKET_URL}"
+                ])
                 // TODO: move to tfDeploy, and leverage tfSaveState
                 withCredentials([string(credentialsId: "AWS_ACCESS_KEY_ID_${DEPLOY_ENV}", variable: 'AWS_ACCESS_KEY_ID')]) {
                     withCredentials([string(credentialsId: "AWS_SECRET_ACCESS_KEY_${DEPLOY_ENV}", variable: 'AWS_SECRET_ACCESS_KEY')]) {
@@ -149,12 +154,14 @@ pipeline {
                             terraform apply -input=false -auto-approve -compact-warnings
 
                             echo Deployed the ${BUILD_ENV} build to ${DEPLOY_ENV}.
-
-                            echo Saving Terraform state remotely
-                            AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} AWS_DEFAULT_REGION=${AWS_REGION} aws s3 cp terraform.tfstate ${TF_STATE_S3_BUCKET_URL}
                         """
                     }
                 }
+                tfSaveState([
+                    AWS_REGION: "${AWS_REGION}",
+                    TF_PROJECT_PATH: "./artifacts/release"
+                    TF_STATE_S3_BUCKET_URL: "${TF_STATE_S3_BUCKET_URL}"
+                ])
             }
         }
         stage('Destroy') {

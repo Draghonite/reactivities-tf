@@ -17,7 +17,7 @@ pipeline {
         choice(
             name: 'RUN_INITIALIZE',
             choices: ['Yes','No'],
-            description: 'Whether to initialize and plan.',
+            description: 'Whether to initialize and validate.',
         )
         choice(
             name: 'RUN_SONAR',
@@ -43,7 +43,7 @@ pipeline {
         PACKAGE_BUILD_PATH = "${BUILDS_PATH}/${PACKAGE_NAME}"
     }
     stages {
-        stage('Synthesize') {
+        stage('Validate') {
             when {
                 expression { RUN_INITIALIZE == "Yes" }
             }
@@ -61,7 +61,7 @@ pipeline {
                         sh """
                             TF_VAR_deploy_env=${params.BUILD_ENV} \
                                 terraform init -no-color -input=false -compact-warnings && \
-                                terraform plan -no-color -input=false -compact-warnings -out=plan.file
+                                terraform validate
                         """
                     }
                 }
@@ -70,7 +70,7 @@ pipeline {
         }
         stage('Sonar Scanner') {
             when {
-                expression { RUN_SONAR == 'Yes' }
+                expression { RUN_INITIALIZE == "Yes" && RUN_SONAR == 'Yes' }
             }
             agent {
                 docker {
@@ -87,7 +87,7 @@ pipeline {
         }
         stage("Quality Gate") {
             when {
-                expression { RUN_SONAR == 'Yes' }
+                expression { RUN_INITIALIZE == "Yes" && RUN_SONAR == 'Yes' }
             }
             steps {
                 awaitQualityGate()
@@ -123,8 +123,3 @@ pipeline {
         }
     }
 }
-// post {
-//     always {
-//         deleteDir()
-//     }
-// }
