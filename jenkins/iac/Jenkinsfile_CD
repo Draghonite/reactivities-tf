@@ -138,8 +138,6 @@ pipeline {
                             terraform init -no-color -input=false -compact-warnings
 
                             #TODO: get and reuse state from s3 bucket
-                            #TF_VAR_export availability_zone=${AWS_AVAILABILITY_ZONE} \
-                            #TF_VAR_export bundle_id=${AWS_BUNDLE_ID} \
                             
                             TF_VAR_region=${params.AWS_REGION} \
                             TF_VAR_export deploy_env=${params.DEPLOY_ENV} \
