@@ -97,64 +97,14 @@ pipeline {
                 expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' && RUN_TYPE == 'Create' }
             }
             steps {
-                // def AWS_AVAILABILITY_ZONE = "${params.AWS_REGION}a";
-                // def AWS_BUNDLE_ID = "nano_2_0";
-                // switch (params.DEPLOY_ENV) {
-                //     case "qa":
-                //         AWS_BUNDLE_ID = "small_2_0"
-                //         break;
-                //     // case "prod":
-                //     //     AWS_BUNDLE_ID = "medium_2_0"
-                //     //     break;
-                // }
-
-                // #TF_VAR_region=${params.AWS_REGION} \
-                //             TF_VAR_export deploy_env=${params.BUILD_ENV} \
-                //             #TF_VAR_export availability_zone=${params.AWS_AVAILABILITY_ZONE} \
-                //             TF_VAR_export bundle_id=${params.AWS_BUNDLE_ID} \
-                //             TF_VAR_export app_name=${params.APPLICATION_NAME} \
-                //                 terraform init -no-color -input=false -compact-warnings && \
-                //                 terraform plan -no-color -input=false -compact-warnings -out=plan.file
-
-                // tfDeploy([
-                //     PACKAGE_NAME: "${PACKAGE_NAME}",
-                //     BUILD_ENV: "${BUILD_ENV}",
-                //     DEPLOY_ENV: "${DEPLOY_ENV}",
-                //     AWS_REGION: "${AWS_REGION}"
-                //     APPLICATION_NAME: "${APPLICATION_NAME}"
-                // ])
-
-                // TODO: move to tfDeploy, and leverage tfSaveState
-                withCredentials([string(credentialsId: "AWS_ACCESS_KEY_ID_${DEPLOY_ENV}", variable: 'AWS_ACCESS_KEY_ID')]) {
-                    withCredentials([string(credentialsId: "AWS_SECRET_ACCESS_KEY_${DEPLOY_ENV}", variable: 'AWS_SECRET_ACCESS_KEY')]) {
-                        sh '''
-                            apk update && apk add terraform aws-cli
-                            rm -rf ./artifacts && mkdir ./artifacts
-                        '''
-                        dir('./artifacts') {
-                            unstash 'artifactstash'
-                        }
-                        sh """
-                            cd ./artifacts && mkdir ./release && cd ./release
-                            tar -xzvf ../${PACKAGE_NAME} .
-                            terraform init -no-color -input=false -compact-warnings
-
-                            echo Loading Terraform state remotely if exists
-                            # TODO: see how to check and/or silently fail -- 2> /dev/null is not enough
-                            AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} AWS_DEFAULT_REGION=${AWS_REGION} aws s3 cp ${TF_STATE_S3_BUCKET_URL} terraform.tfstate
-                            
-                            TF_VAR_region=${AWS_REGION} \
-                            TF_VAR_deploy_env=${DEPLOY_ENV} \
-                            TF_VAR_app_name=${APPLICATION_NAME} \
-                            terraform apply -input=false -auto-approve -compact-warnings
-
-                            echo Deployed the ${BUILD_ENV} build to ${DEPLOY_ENV}.
-
-                            echo Saving Terraform state remotely
-                            AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} AWS_DEFAULT_REGION=${AWS_REGION} aws s3 cp terraform.tfstate ${TF_STATE_S3_BUCKET_URL}
-                        """
-                    }
-                }
+                tfDeploy([
+                    PACKAGE_NAME: "${PACKAGE_NAME}",
+                    BUILD_ENV: "${BUILD_ENV}",
+                    DEPLOY_ENV: "${DEPLOY_ENV}",
+                    AWS_REGION: "${AWS_REGION}"
+                    APPLICATION_NAME: "${APPLICATION_NAME}"
+                    TF_STATE_S3_BUCKET_URL: "${TF_STATE_S3_BUCKET_URL}"
+                ])
             }
         }
         stage('Destroy') {
@@ -162,28 +112,12 @@ pipeline {
                 expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' && RUN_TYPE == 'Destroy' }
             }
             steps {
-                // def AWS_AVAILABILITY_ZONE = "${params.AWS_REGION}a";
-                // def AWS_BUNDLE_ID = "nano_2_0";
-                // switch (params.DEPLOY_ENV) {
-                //     case "qa":
-                //         AWS_BUNDLE_ID = "small_2_0"
-                //         break;
-                //     // case "prod":
-                //     //     AWS_BUNDLE_ID = "medium_2_0"
-                //     //     break;
-                // }
                 tfDestroy([
                     PACKAGE_NAME: "${PACKAGE_NAME}",
                     BUILD_ENV: "${BUILD_ENV}",
                     DEPLOY_ENV: "${DEPLOY_ENV}",
                     AWS_REGION: "${AWS_REGION}"
                 ])
-                // TODO: stash state to 'tfstate'
-                // sh """
-                //     echo Saving Terraform state remotely
-                //     apk add aws-cli
-                //     AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} AWS_DEFAULT_REGION=${AWS_REGION} aws s3 cp terraform.tfstate ${TF_STATE_S3_BUCKET_URL}
-                // """
             }
         }
     }
