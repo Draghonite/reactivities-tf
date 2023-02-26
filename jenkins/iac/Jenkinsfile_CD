@@ -147,15 +147,7 @@ pipeline {
 
                             echo Deployed the ${params.BUILD_ENV} build to ${params.DEPLOY_ENV}.
 
-                            echo Saving state to S3
-                            apk update \
-                                && apk --no-cache add curl \
-                                && apk --no-cache add unzip \
-                                && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
-                                && unzip awscliv2.zip \
-                                && ./aws/install -i /usr/local/aws -b /usr/local/bin/aws
                         """
-                        input type="use aws cli to post file; done?"
                     }
                 }
             }
@@ -181,6 +173,19 @@ pipeline {
                     DEPLOY_ENV: "${DEPLOY_ENV}",
                     AWS_REGION: "${AWS_REGION}"
                 ])
+            }
+        }
+        stage('Save State') {
+            when {
+                expression { DRY_RUN == 'No' && RUN_PACKAGE_DOWNLOAD == 'Yes' && RUN_DEPLOYMENT == 'Yes' }
+            }
+            agent {
+                docker {
+                    image 'amazon/aws-cli'
+                }
+            }
+            steps {
+                input type="use aws cli to post file; done?"
             }
         }
     }
