@@ -1,0 +1,4 @@
+region = "us-east-1"
+deploy_env = "prod"
+availability_zone = "us-east-1a"
+bundle_id = "medium_2_0"

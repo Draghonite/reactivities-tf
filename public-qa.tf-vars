@@ -1,0 +1,4 @@
+region = "us-east-1"
+deploy_env = "qa"
+availability_zone = "us-east-1a"
+bundle_id = "small_2_0"
