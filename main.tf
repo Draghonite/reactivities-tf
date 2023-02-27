@@ -14,7 +14,7 @@ variable "deploy_env" {
 
 variable "availability_zone" {
   type = string
-  default = "${var.region}a"
+  default = "us-east-1a"
 }
 
 variable "bundle_id" {
