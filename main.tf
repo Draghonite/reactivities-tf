@@ -4,17 +4,15 @@ provider "aws" {
 
 variable "region" {
   type = string
-  default = "us-east-1"
+}
+
+variable "availability_zone" {
+  type = string
 }
 
 variable "deploy_env" {
   type = string
   default = "dev"
-}
-
-variable "availability_zone" {
-  type = string
-  default = "us-east-1a"
 }
 
 variable "bundle_id" {
