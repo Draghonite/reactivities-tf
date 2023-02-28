@@ -23,6 +23,20 @@ pipeline {
             description: 'Environment for which to deploy.',
         )
         choice(
+            name: 'AWS_REGION',
+            choices: ['us-east-1', 'us-east-2', 'us-west-2'],
+            description: 'AWS Region for deployment of cloud resources.'
+        )
+        string(
+            name: 'CI_BUILD_NUMBER',
+            description: 'Version of the package to deploy.  Same as the version prefix + CI build number (e.g. "1.0.XXX").'
+        )
+        choice(
+            name: 'RUN_TYPE',
+            choices: ['Create', 'Destroy'],
+            description: 'Whether to create or destroy resources.'
+        )
+        choice(
             name: 'RUN_PACKAGE_DOWNLOAD',
             choices: ['Yes','No'],
             description: 'Whether to download the artifact(s).',
@@ -36,20 +50,6 @@ pipeline {
             name: 'RUN_DEPLOYMENT',
             choices: ['Yes','No'],
             description: 'Whether to perform the deployment.',
-        )
-        choice(
-            name: 'AWS_REGION',
-            choices: ['us-east-1', 'us-east-2', 'us-west-2'],
-            description: 'AWS Region for deployment of cloud resources.'
-        )
-        choice(
-            name: 'RUN_TYPE',
-            choices: ['Create', 'Destroy'],
-            description: 'Whether to create or destroy resources.'
-        )
-        string(
-            name: 'CI_BUILD_NUMBER',
-            description: 'Version of the package to deploy.  Same as the version prefix + CI build number (e.g. "1.0.XXX").'
         )
         choice(
             name: 'DRY_RUN',
