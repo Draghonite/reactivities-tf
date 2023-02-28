@@ -9,12 +9,11 @@ pipeline {
     // *** Documentation ***
     // name: reactivities-client-app-cd
     // descrition: 'Continuous Delivery for the Infrastructure-as-Code part of the Reactivities client application.'
-    // discardOldBuilds: strategy: Log Rotation, maxBuildsToKeep: 10
-    // doNotAllowConcurrentBuilds: true
     // server env vars: ARTIFACTORY_CREDS_ID, ARTIFACTORY_SERVER
     // credentials: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
     options {
         buildDiscarder(logRotator(numToKeepStr:'5'))
+        disableConcurrentBuilds()
     }
     parameters {
         choice(
