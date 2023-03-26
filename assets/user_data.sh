@@ -8,7 +8,7 @@ snap alias dotnet-runtime-60.dotnet dotnet
 export DOTNET_ROOT=/snap/dotnet-sdk/current
 
 mkdir -p /var/www/html/api
-mkdir -p /var/www/html/client
+mkdir -p /var/www/html/app
 
 cat << EOF > /etc/nginx/sites-available/default
 server {
