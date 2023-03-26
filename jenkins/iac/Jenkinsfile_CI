@@ -128,7 +128,7 @@ pipeline {
             }
             agent any
             steps {
-                build job: "${CD_JOB_NAME}", wait: true, parameters: [
+                build job: "${CD_JOB_NAME}", wait: false, parameters: [
                     string(name: 'DEPLOY_ENV', value: "${BUILD_ENV}"),
                     string(name: 'AWS_REGION', value: 'us-east-1'),
                     string(name: 'CI_BUILD_NUMBER', value: "${BUILD_PREFIX}.${BUILD_NUMBER}"),
