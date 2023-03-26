@@ -129,12 +129,14 @@ pipeline {
             agent any
             steps {
                 build job: "${CD_JOB_NAME}", parameters: [{
-                    string(name: 'DEPLOY_ENV', value: $BUILD_ENV)
+                    string(name: 'DEPLOY_ENV', value: "${BUILD_ENV}")
+                    string(name: 'AWS_REGION', value: 'us-east-1')
                     string(name: 'CI_BUILD_NUMBER', value: "${BUILD_PREFIX}.${BUILD_NUMBER}")
                     string(name: 'RUN_TYPE', value: 'Create')
                     string(name: 'RUN_PACKAGE_DOWNLOAD', value: 'Yes')
                     string(name: 'RUN_PACKAGE_VERIFY', value: 'Yes')
                     string(name: 'RUN_DEPLOYMENT', value: 'Yes')
+                    string(name: 'DRY_RUN', value: 'No')
                 }], wait: true
             }
         }
