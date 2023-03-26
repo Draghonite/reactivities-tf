@@ -39,7 +39,7 @@ pipeline {
         )
     }
     environment {
-        CI = 'false' // TODO: set to true, false for now -- else builds fail due to client build warnings
+        CI = 'false' // TODO: set to true, false for now
         SONAR_PROJECT_KEY = 'Reactivities-TF'
         SONAR_PROJECT_BASE_PATH = '.'
         SONAR_SERVER_ID = 'SonarQubeScanner'
@@ -49,6 +49,8 @@ pipeline {
         PACKAGE_NAME = "reactivities-tf-${BUILD_ENV}-${BUILD_PREFIX}.${BUILD_NUMBER}.tar.gz"
         PACKAGE_REPO_PATH = "reactivities/tf/${BUILD_ENV}/${PACKAGE_NAME}"
         PACKAGE_BUILD_PATH = "${BUILDS_PATH}/${PACKAGE_NAME}"
+        // only uses the string replacement (and runs the job) if using a specific pattern (job names end with "-ci" => "-cd")
+        CD_JOB_NAME = "${ JOB_NAME.endsWith('-ci') && JOB_NAME.indexOf('-ci') == JOB_NAME.length() - 3 ? JOB_NAME.replaceAll('-ci', '-cd') : '' }"
     }
     stages {
         stage('Validate') {
@@ -122,20 +124,18 @@ pipeline {
         }
         stage('Deploy') {
             when {
-                expression { RUN_INITIALIZE == "Yes" && RUN_PACKAGE_ARCHIVE == "Yes" && RUN_DEPLOY == "Yes" }
+                expression { CD_JOB_NAME != "" && RUN_INITIALIZE == "Yes" && RUN_PACKAGE_ARCHIVE == "Yes" && RUN_DEPLOY == "Yes" }
             }
             agent any
             steps {
-                echo sh(script: 'env|sort', returnStdout: true)
-
-                // build job: 'draghonite/reactivities/reactivities-iac-cd', parameters: [{
-                //     string(name: 'DEPLOY_ENV', value: $BUILD_ENV)
-                //     string(name: 'CI_BUILD_NUMBER', value: $BUILD_NUMBER)
-                //     string(name: 'RUN_TYPE', value: 'Create')
-                //     string(name: 'RUN_PACKAGE_DOWNLOAD', value: 'Yes')
-                //     string(name: 'RUN_PACKAGE_VERIFY', value: 'Yes')
-                //     string(name: 'RUN_DEPLOYMENT', value: 'Yes')
-                // }], wait: true
+                build job: $CD_JOB_NAME, parameters: [{
+                    string(name: 'DEPLOY_ENV', value: $BUILD_ENV)
+                    string(name: 'CI_BUILD_NUMBER', value: "${BUILD_PREFIX}.${BUILD_NUMBER}")
+                    string(name: 'RUN_TYPE', value: 'Create')
+                    string(name: 'RUN_PACKAGE_DOWNLOAD', value: 'Yes')
+                    string(name: 'RUN_PACKAGE_VERIFY', value: 'Yes')
+                    string(name: 'RUN_DEPLOYMENT', value: 'Yes')
+                }], wait: true
             }
         }
     }
