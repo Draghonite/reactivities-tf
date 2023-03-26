@@ -32,6 +32,11 @@ pipeline {
             choices: ['Yes','No'],
             description: 'Whether to package the artifact(s).',
         )
+        choice(
+            name: 'RUN_DEPLOY',
+            choices: ['Yes','No'],
+            description: 'Whether to trigger the CD pipeline.',
+        )
     }
     environment {
         CI = 'false' // TODO: set to true, false for now -- else builds fail due to client build warnings
@@ -112,6 +117,24 @@ pipeline {
                 ])
                 cleanDirectory([ DIRECTORY: "${BUILDS_PATH}" ])
                 cleanDirectory([ DIRECTORY: "./artifacts" ])
+            }
+        }
+        stage('Deploy') {
+            when {
+                expression { RUN_INITIALIZE == "Yes" && RUN_PACKAGE_ARCHIVE == "Yes" && RUN_DEPLOY == "Yes" }
+            }
+            agent any
+            steps {
+                echo sh(script: 'env|sort', returnStdout: true)
+                
+                // build job: 'draghonite/reactivities/reactivities-iac-cd', parameters: [{
+                //     string(name: 'DEPLOY_ENV', value: $BUILD_ENV)
+                //     string(name: 'CI_BUILD_NUMBER', value: $BUILD_NUMBER)
+                //     string(name: 'RUN_TYPE', value: 'Create')
+                //     string(name: 'RUN_PACKAGE_DOWNLOAD', value: 'Yes')
+                //     string(name: 'RUN_PACKAGE_VERIFY', value: 'Yes')
+                //     string(name: 'RUN_DEPLOYMENT', value: 'Yes')
+                // }], wait: true
             }
         }
     }
