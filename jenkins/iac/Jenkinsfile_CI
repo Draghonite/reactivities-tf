@@ -24,7 +24,7 @@ pipeline {
         )
         choice(
             name: 'RUN_SONAR',
-            choices: ['No','Yes'],
+            choices: ['Yes','No'],
             description: 'Whether to run SonarQube Scanner and Quality Gate stages.',
         )
         choice(
@@ -126,7 +126,7 @@ pipeline {
             agent any
             steps {
                 echo sh(script: 'env|sort', returnStdout: true)
-                
+
                 // build job: 'draghonite/reactivities/reactivities-iac-cd', parameters: [{
                 //     string(name: 'DEPLOY_ENV', value: $BUILD_ENV)
                 //     string(name: 'CI_BUILD_NUMBER', value: $BUILD_NUMBER)
