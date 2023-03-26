@@ -41,6 +41,10 @@ SyslogIdentifier=reactivities
 User=www-data
 Environment=ASPNETCORE_ENVIRONMENT=Production
 Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+Environment=Cloudinary__ApiKey=NONE
+Environment=Cloudinary__ApiSecret=NONE
+Environment=Cloudinary__CloudName=NONE
+Environment=DATABASE_URL=NONE
 
 [Install]
 WantedBy=multi-user.target
