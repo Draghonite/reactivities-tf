@@ -108,6 +108,7 @@ pipeline {
                 sh """
                     mkdir -p ${BUILDS_PATH}
                     cd ./artifacts && tar -czvf ${PACKAGE_BUILD_PATH} --exclude='.gen' --exclude='.scannerwork' .
+                    apk add curl
                 """
                 archiveArtifact([
                     ARTIFACTORY_CREDS_ID: "${ARTIFACTORY_CREDS_ID}",
