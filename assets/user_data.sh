@@ -26,5 +26,27 @@ server {
 }
 EOF
 
-service nginx start
-nginx -s reload
+cat << EOF > /etc/systemd/system/kestrel-reactivities.service
+[Unit]
+Description=Reactivities React and DotNet Application and API
+
+[Service]
+WorkingDirectory=/var/www/html/api
+ExecStart=/usr/bin/dotnet /var/www/html/api/API.dll
+Restart=always
+# Restart service after 10 seconds if the dotnet service crashes:
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=reactivities
+User=www-data
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl enable kestrel-reactivities.service
+
+sudo systemctl start kestrel-reactivities.service
+sudo systemctl status kestrel-reactivities.service
