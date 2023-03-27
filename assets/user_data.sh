@@ -7,8 +7,6 @@ snap install dotnet-runtime-60 --classic
 snap alias dotnet-runtime-60.dotnet dotnet
 export DOTNET_ROOT=/snap/dotnet-sdk/current
 
-mkdir -p /var/www/html/wwwroot
-
 cat << EOF > /etc/nginx/sites-available/default
 server {
     listen        80;
