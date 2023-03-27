@@ -7,8 +7,8 @@ snap install dotnet-runtime-60 --classic
 snap alias dotnet-runtime-60.dotnet dotnet
 export DOTNET_ROOT=/snap/dotnet-sdk/current
 
-mkdir -p /var/www/html/api
-mkdir -p /var/www/html/app
+mkdir -p /var/www/reactivities
+mkdir -p /var/www/reactivities/wwwroot
 
 cat << EOF > /etc/nginx/sites-available/default
 server {
@@ -31,8 +31,8 @@ cat << EOF > /etc/systemd/system/kestrel-reactivities.service
 Description=Reactivities React and DotNet Application and API
 
 [Service]
-WorkingDirectory=/var/www/html/api
-ExecStart=/usr/bin/dotnet /var/www/html/api/API.dll
+WorkingDirectory=/var/www/reactivities
+ExecStart=/usr/bin/dotnet /var/www/reactivities/API.dll
 Restart=always
 # Restart service after 10 seconds if the dotnet service crashes:
 RestartSec=10
