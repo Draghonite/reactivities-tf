@@ -29,7 +29,7 @@ Description=Reactivities React and DotNet Application and API
 
 [Service]
 WorkingDirectory=/var/www/html
-ExecStart=/usr/bin/dotnet /var/www/html/API.dll
+ExecStart=/snap/bin/dotnet /var/www/html/API.dll
 Restart=always
 # Restart service after 10 seconds if the dotnet service crashes:
 RestartSec=10
@@ -48,6 +48,5 @@ WantedBy=multi-user.target
 EOF
 
 sudo systemctl enable kestrel-reactivities.service
-
 sudo systemctl start kestrel-reactivities.service
 sudo systemctl status kestrel-reactivities.service
