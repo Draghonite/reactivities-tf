@@ -62,6 +62,7 @@ pipeline {
         APPLICATION_NAME = 'Reactivities'
         PACKAGE_NAME = "reactivities-tf-${BUILD_ENV}-${CI_BUILD_NUMBER}.tar.gz"
         PACKAGE_REPO_PATH = "reactivities/tf/${BUILD_ENV}/${PACKAGE_NAME}"
+        // TODO: parameterize the S3 bucket
         TF_STATE_S3_BUCKET_URL = "s3://terraform-state-sidemotion/${DEPLOY_ENV}/reactivities-tf/${AWS_REGION}/terraform.tfstate"
     }
     stages {
