@@ -9,8 +9,15 @@ export DOTNET_ROOT=/snap/dotnet-sdk/current
 
 cat << EOF > /etc/nginx/sites-available/default
 server {
-    listen        80;
+    listen        80 default_server;
+    server_name reactivities.com www.reactivities.com;
+    root /var/www/reactivities.com/html;
+
     location / {
+        root /var/www/reactivities.com/html/client;
+    }
+
+    location /api {
         proxy_pass         http://127.0.0.1:5000;
         proxy_http_version 1.1;
         proxy_set_header   Upgrade $http_upgrade;
@@ -20,6 +27,9 @@ server {
         proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header   X-Forwarded-Proto $scheme;
     }
+
+    error_page 404 /404.html;
+    error_page 500 501 502 503 504 50x.html;
 }
 EOF
 
@@ -28,8 +38,8 @@ cat << EOF > /etc/systemd/system/kestrel-reactivities.service
 Description=Reactivities React and DotNet Application and API
 
 [Service]
-WorkingDirectory=/var/www/html
-ExecStart=/snap/bin/dotnet /var/www/html/API.dll
+WorkingDirectory=/var/www/reactivities.com/html/api
+ExecStart=/snap/bin/dotnet /var/www/reactivities.com/html/api/API.dll
 Restart=always
 # Restart service after 10 seconds if the dotnet service crashes:
 RestartSec=10
