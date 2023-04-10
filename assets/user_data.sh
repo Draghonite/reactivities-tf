@@ -62,6 +62,7 @@ Environment=DATABASE_URL=NONE
 WantedBy=multi-user.target
 EOF
 
+sudo nginx -s reload
 sudo systemctl enable kestrel-reactivities.service
 sudo systemctl start kestrel-reactivities.service
 sudo systemctl status kestrel-reactivities.service
