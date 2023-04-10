@@ -9,7 +9,7 @@ export DOTNET_ROOT=/snap/dotnet-sdk/current
 
 mkdir -p /var/www/reactivities.com/html/client
 mkdir -p /var/www/reactivities.com/html/api
-echo "<h1>Client></h1>" > /var/www/reactivities.com/html/client/test.html
+echo "<h1>Client</h1>" > /var/www/reactivities.com/html/client/test.html
 echo "<h1>API</h1>" > /var/www/reactivities.com/html/api/test.html
 
 cat << EOF > /etc/nginx/sites-available/default
@@ -25,12 +25,12 @@ server {
     location /api {
         proxy_pass         http://127.0.0.1:5000;
         proxy_http_version 1.1;
-        proxy_set_header   Upgrade $http_upgrade;
+        proxy_set_header   Upgrade \$http_upgrade;
         proxy_set_header   Connection keep-alive;
-        proxy_set_header   Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_set_header   X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto \$scheme;
     }
 
     error_page 404 /404.html;
