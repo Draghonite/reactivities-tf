@@ -7,6 +7,11 @@ snap install dotnet-runtime-60 --classic
 snap alias dotnet-runtime-60.dotnet dotnet
 export DOTNET_ROOT=/snap/dotnet-sdk/current
 
+mkdir -p /var/www/reactivities.com/html/client
+mkdir -p /var/www/reactivities.com/html/api
+echo <h1>Client></h1> > /var/www/reactivities.com/html/client/test.html
+echo <h1>API</h1> > /var/www/reactivities.com/html/api/test.html
+
 cat << EOF > /etc/nginx/sites-available/default
 server {
     listen        80 default_server;
