@@ -62,6 +62,18 @@ Environment=DATABASE_URL=NONE
 WantedBy=multi-user.target
 EOF
 
+cat << EOF > /var/www/reactivities.com/html/api/appsettings.json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Information"
+    }
+  },
+  "TokenKey": "JWT_ISSUER_SIGNING_KEY"
+}
+EOF
+
 sudo nginx -s reload
 sudo systemctl enable kestrel-reactivities.service
 sudo systemctl start kestrel-reactivities.service
