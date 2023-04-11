@@ -44,7 +44,7 @@ Description=Reactivities React and DotNet Application and API
 
 [Service]
 WorkingDirectory=/var/www/reactivities.com/html/api
-ExecStart=/snap/bin/dotnet /var/www/reactivities.com/html/api/API.dll
+ExecStart=/snap/bin/dotnet API.dll
 Restart=always
 # Restart service after 10 seconds if the dotnet service crashes:
 RestartSec=10
