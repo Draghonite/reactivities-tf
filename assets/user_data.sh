@@ -56,7 +56,7 @@ Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
 Environment=Cloudinary__ApiKey=NONE
 Environment=Cloudinary__ApiSecret=NONE
 Environment=Cloudinary__CloudName=NONE
-Environment=DATABASE_URL=NONE
+Environment=CONNECTION_STRING=NONE
 
 [Install]
 WantedBy=multi-user.target
